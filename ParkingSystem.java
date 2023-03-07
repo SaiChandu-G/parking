@@ -9,6 +9,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import java.util.Scanner;
 
@@ -24,7 +26,8 @@ public class ParkingSystem {
 	private static OutputStream writeFIleData;
 	private static File file = new File(FILE_PATH);
 	private static Properties prop = new Properties();
-	static BufferedReader br;
+	private static BufferedReader br;
+	private static List<Integer> parkingSize = new ArrayList<>();
 
 	public static void main(String[] args) throws IOException {
 
@@ -63,7 +66,7 @@ public class ParkingSystem {
 			switch (choice) {
 			case 1:
 				// Park a car
-				parkCar();
+				collectCar();
 				break;
 			case 2:
 				// Remove a car
@@ -75,12 +78,63 @@ public class ParkingSystem {
 				break;
 			case 4:
 				// Exit the program
+				parkCar();
 				System.out.println("\nThank you...");
+				scanner.close();
 				System.exit(0);
 				break;
 			default:
 				System.out.println("\nInvalid choice! Please try again.");
 			}
+		}
+	}
+
+	private static void collectCar() {
+		try {
+
+			int initialCar = 1;
+			int carToBeParked = 0;
+
+			InputStream readFileData = readFileData();
+			prop.load(readFileData);
+			readFileData.close();
+
+			int alreadyFilledCars = Integer.parseInt(prop.getProperty("size"));
+			if (alreadyFilledCars >= MAX_CAPACITY) {
+				// No parking spots are available
+				System.out.println("\nSorry, the parking lot is full.");
+				return;
+			}
+
+			System.out.println("afc : " + alreadyFilledCars);
+
+			if (alreadyFilledCars == 0 && parkingSize.size() == 0) {
+				parkingSize.add(initialCar);
+				System.out.println("\nCar parked at slot " + parkingSize.get(0));
+			} else {
+				if (parkingSize.get(0) != null) {
+					if (alreadyFilledCars != 0) {
+
+						carToBeParked = alreadyFilledCars + 1;
+					} else {
+						carToBeParked = parkingSize.get(0) + 1;
+					}
+					System.out.println("ctbp : " + carToBeParked);
+					parkingSize.set(0, carToBeParked);
+					System.out.println("\nCar parked at slot " + parkingSize.get(0));
+				}
+			}
+
+			// System.out.println("117 : " + parkingSize.get(0));
+//			carToBeParked = alreadyFilledCars + 1;
+
+//			writeFIleData = new FileOutputStream(FILE_PATH);
+//			prop.setProperty("size", String.valueOf(carToBeParked));
+//			prop.store(writeFIleData, null);
+//			System.out.println("\nCar parked at slot " + carToBeParked);
+//			writeFIleData.close();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -90,21 +144,17 @@ public class ParkingSystem {
 			prop.load(readFileData);
 			readFileData.close();
 
-			int filledCarsPosition = Integer.parseInt(prop.getProperty("size"));
-			if (filledCarsPosition >= MAX_CAPACITY) {
-				// No parking spots are available
-				System.out.println("\nSorry, the parking lot is full.");
+			if (parkingSize.get(0) == null || parkingSize.get(0) == 0) {
 				return;
 			}
-			int carPositionToBeParked = filledCarsPosition + 1;
 
 			writeFIleData = new FileOutputStream(FILE_PATH);
-			prop.setProperty("size", String.valueOf(carPositionToBeParked));
+			prop.setProperty("size", String.valueOf(parkingSize.get(0)));
 			prop.store(writeFIleData, null);
-			System.out.println("\nCar parked at slot " + carPositionToBeParked);
 			writeFIleData.close();
+
 		} catch (IOException e) {
-			e.printStackTrace();
+
 		}
 	}
 
